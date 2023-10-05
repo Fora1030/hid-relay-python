@@ -3,9 +3,11 @@ from ctypes import Structure, Union, c_ubyte, c_long, c_ulong, c_ushort, \
         c_wchar, c_void_p, c_uint 
 from ctypes.wintypes import ULONG, BOOLEAN, BYTE, WORD, DWORD, HANDLE, BOOL, \
         WCHAR, LPWSTR, LPCWSTR
+
+
 hid_dll = ctypes.windll.hid
 
-class GUID_BUFFER(ctypes.Structure):
+class GUID(ctypes.Structure):
     """ 
         Globally Unique Identifier Buffer
         --- 
@@ -28,4 +30,4 @@ class GUID_BUFFER(ctypes.Structure):
 
 
 
-print(hid_dll.HidD_GetHidGuid(ctypes.byref(GUID_BUFFER())))
+print(hid_dll.HidD_GetHidGuid(ctypes.byref(GUID())))

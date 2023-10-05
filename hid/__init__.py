@@ -1,0 +1,1 @@
+from hid_dll_api import GUID
