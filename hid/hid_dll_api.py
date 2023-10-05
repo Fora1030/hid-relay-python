@@ -28,6 +28,7 @@ class GUID(ctypes.Structure):
         ("data4", BYTE * 8),
     ]
 
-
-
-print(hid_dll.HidD_GetHidGuid(ctypes.byref(GUID())))
+def get_hid_guid():
+    hid_guid = GUID()
+    hid_dll.HidD_GetHidGuid(ctypes.byref(hid_guid))
+    return hid_guid

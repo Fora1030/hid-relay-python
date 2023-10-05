@@ -3,11 +3,15 @@ from ctypes import Structure, Union, c_ubyte, c_long, c_ulong, c_ushort, \
         c_wchar, c_void_p, c_uint 
 from ctypes.wintypes import ULONG, BOOLEAN, BYTE, WORD, DWORD, HANDLE, BOOL, \
         WCHAR, LPWSTR, LPCWSTR
-
-from hid_dll_api import GUID
+from hid_dll_api import GUID, get_hid_guid
+import platform
 
 setup_dll = ctypes.windll.setupapi
 
+if platform.architecture()[0].startswith('64'):
+    WIN_PACK = 8
+else:
+    WIN_PACK = 1
 
 class DIGCF:
     """
@@ -21,11 +25,11 @@ class DIGCF:
     DEVICEINTERFACE = 0x00000010
 
 
-class SP_DEVINFO_DATA(ctypes.Structure):
+class SP_DEVINFO_DATA(Structure):
     """
         C structure that specifies a device information element
     """
-    _pack_ = 8 # for 64 bits
+    _pack_ = WIN_PACK 
     _fields_ = [
         ("cb_size", DWORD),
         ("class_guid", GUID),
@@ -38,13 +42,24 @@ class SP_DEVICE_INTERFACE_DATA(Structure):
         An SP_DEVICE_INTERFACE_DATA structure defines a device 
         interface in a device information set.
     """
-    _pack_ = 8
+    _pack_ = WIN_PACK
     _fields_ = [ \
             ("cb_size",              DWORD),
             ("interface_class_guid", GUID),
             ("flags",                DWORD),
             ("reserved",             ctypes.POINTER(ULONG))
     ]
+
+class SP_DEVICE_INTERFACE_DETAIL_DATA(Structure):
+    """ Structure to receive information about the the specified interface"""
+    _pack_ = WIN_PACK
+    _fields_ = [
+        ("cb_size", DWORD),
+        ("device_path", WCHAR*1),
+    ]
+
+    def __str__(self) -> str:
+        return ctypes.wstring_at(ctypes.byref(self, ctypes.sizeof(DWORD)))
 
 SetupDiGetClassDevsW = setup_dll.SetupDiGetClassDevsW
 SetupDiGetClassDevsW.restype = HANDLE
@@ -69,6 +84,17 @@ SetupDiEnumDeviceInterfaces.argtypes = [
 SetupDiDestroyDeviceInfoList = setup_dll.SetupDiDestroyDeviceInfoList
 SetupDiDestroyDeviceInfoList.restype = BOOL
 SetupDiDestroyDeviceInfoList.argtypes = [HANDLE]
+
+SetupDiGetDeviceInterfaceDetail = setup_dll.SetupDiGetDeviceInterfaceDetailW
+SetupDiGetDeviceInterfaceDetail.restype = BOOL
+SetupDiGetDeviceInterfaceDetail.argtypes = [
+    HANDLE,
+    ctypes.POINTER(SP_DEVICE_INTERFACE_DATA),
+    ctypes.POINTER(SP_DEVICE_INTERFACE_DETAIL_DATA),
+    DWORD,
+    ctypes.POINTER(DWORD),
+    ctypes.POINTER(SP_DEVINFO_DATA),
+    ]
 
 class DeviceInformationSetInterface(object):
     """
@@ -96,7 +122,7 @@ class DeviceInformationSetInterface(object):
         )
         return self.handle_info
     
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
     def close(self):
@@ -107,7 +133,7 @@ class DeviceInformationSetInterface(object):
 
 def enum_device_interfaces(handle_info, guid):
     dev_interface_data = SP_DEVICE_INTERFACE_DATA()
-    dev_interface_data.cb_size = ctypes.sizeof(SP_DEVICE_INTERFACE_DATA)
+    dev_interface_data.cb_size = ctypes.sizeof(dev_interface_data)
 
     device_index = 0
     while SetupDiEnumDeviceInterfaces(
@@ -118,11 +144,27 @@ def enum_device_interfaces(handle_info, guid):
         device_index += 1
     del dev_interface_data
 
+def get_device_path(handle_info, interface_data, ptr_info_data= None):
+    required_size = c_ulong(0)
+    dev_interface_detail_data = SP_DEVICE_INTERFACE_DETAIL_DATA()
+    dev_interface_detail_data.cb_size = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
 
-    ...
+    # get storage requirement 
+    SetupDiGetDeviceInterfaceDetail(
+        handle_info, ctypes.byref(interface_data), 
+        None, 0, ctypes.byref(required_size), None)
+    
+    ctypes.resize(dev_interface_detail_data, required_size.value)
 
-def find_all_divices():
-    guid = GUID()
+    SetupDiGetDeviceInterfaceDetail(
+        handle_info, ctypes.byref(interface_data),
+        ctypes.byref(dev_interface_detail_data), # get value
+        required_size, None, ptr_info_data
+        )
+    return dev_interface_detail_data.__str__()
+
+def find_all_devices():
+    guid = get_hid_guid()
     results = []
     required_size = DWORD()
 
@@ -130,7 +172,10 @@ def find_all_divices():
     info_data.cb_size = ctypes.sizeof(SP_DEVINFO_DATA)
     with DeviceInformationSetInterface(guid) as handle_info:
         for interface_data in enum_device_interfaces(handle_info, guid):
-            ...
-    handle = SetupDiGetClassDevsW(ctypes.byref(guid), None, None, (DIGCF.PRESENT | DIGCF.DEVICEINTERFACE))
-    print(handle)
-    print(SetupDiDestroyDeviceInfoList(handle))
+            device_path = get_device_path(handle_info, interface_data, ctypes.byref(info_data))
+            print("path", device_path)
+    # handle = SetupDiGetClassDevsW(ctypes.byref(guid), None, None, (DIGCF.PRESENT | DIGCF.DEVICEINTERFACE))
+    # print(handle)
+    # print(SetupDiDestroyDeviceInfoList(handle))
+
+find_all_devices()
