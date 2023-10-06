@@ -1,4 +1,5 @@
 import ctypes
+import threading
 from ctypes import Structure, Union, c_ubyte, c_long, c_ulong, c_ushort, \
         c_wchar, c_void_p, c_uint 
 from ctypes.wintypes import ULONG, BOOLEAN, BYTE, WORD, DWORD, HANDLE, BOOL, \
@@ -32,3 +33,15 @@ def get_hid_guid():
     hid_guid = GUID()
     hid_dll.HidD_GetHidGuid(ctypes.byref(hid_guid))
     return hid_guid
+
+class HidDeviceBaseClass(object):
+    _raw_reports_lock = threading.Lock()
+
+    def __init__(self) -> None:
+        pass
+
+class HidDeviceCreateFile(HidDeviceBaseClass):
+    def __init__(self, device_path, instance_id) -> None:
+        self.device_path = device_path
+        self.instance_id = instance_id
+        super().__init__()

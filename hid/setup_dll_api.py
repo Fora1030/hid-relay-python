@@ -96,6 +96,17 @@ SetupDiGetDeviceInterfaceDetail.argtypes = [
     ctypes.POINTER(SP_DEVINFO_DATA),
     ]
 
+SetupDiGetDeviceInstanceId          = setup_dll.SetupDiGetDeviceInstanceIdW #NOTE needed
+SetupDiGetDeviceInstanceId.restype  = BOOL
+SetupDiGetDeviceInstanceId.argtypes = [
+    HANDLE,
+    ctypes.POINTER(SP_DEVINFO_DATA), 
+    LPWSTR,
+    DWORD,
+    ctypes.POINTER(DWORD), 
+    ]
+
+
 class DeviceInformationSetInterface(object):
     """
         Interface for SetupDiGetClassDevsW function (setupapi.h) which returns a handle 
@@ -174,6 +185,36 @@ def find_all_devices():
         for interface_data in enum_device_interfaces(handle_info, guid):
             device_path = get_device_path(handle_info, interface_data, ctypes.byref(info_data))
             print("path", device_path)
+            
+            parent_device = c_ulong() # NOTE: Study c_ulong
+
+            #get parent instance id (so we can discriminate on port)
+            if setup_dll.CM_Get_Parent(ctypes.byref(parent_device),
+                    info_data.dev_inst, 0) != 0: #CR_SUCCESS = 0
+                parent_device.value = 0 #null
+
+            #get unique instance id string
+            required_size.value = 0
+            SetupDiGetDeviceInstanceId(handle_info, ctypes.byref(info_data),
+                    None, 0,
+                    ctypes.byref(required_size) )
+
+            device_instance_id = create_unicode_buffer(required_size.value)
+            if required_size.value > 0:
+                SetupDiGetDeviceInstanceId(handle_info, ctypes.byref(info_data),
+                        device_instance_id, required_size,
+                        ctypes.byref(required_size) )
+
+                hid_device = HidDevice(device_path,
+                        parent_device.value, device_instance_id.value )
+            else:
+                hid_device = HidDevice(device_path, parent_device.value )
+
+            # add device to results, if not protected
+            if hid_device.vendor_id:
+                results.append(hid_device)
+    return results
+
     # handle = SetupDiGetClassDevsW(ctypes.byref(guid), None, None, (DIGCF.PRESENT | DIGCF.DEVICEINTERFACE))
     # print(handle)
     # print(SetupDiDestroyDeviceInfoList(handle))
