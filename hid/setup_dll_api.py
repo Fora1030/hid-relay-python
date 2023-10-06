@@ -1,3 +1,4 @@
+import sys as _sys
 import ctypes
 from ctypes import Structure, Union, c_ubyte, c_long, c_ulong, c_ushort, \
         c_wchar, c_void_p, c_uint 
@@ -142,6 +143,25 @@ class DeviceInformationSetInterface(object):
             SetupDiDestroyDeviceInfoList(self.handle_info)
         self.handle_info = None
 
+def create_unicode_buffer(init, size=None):
+    if isinstance(init, str):
+        if size is None:
+            if ctypes.sizeof(c_wchar) == 2:
+                size = sum(2 if ord(c) > 0xFFFF else 1 for c in init) + 1
+            else:
+                size = len(init) + 1
+        _sys.audit("ctypes.create_unicode_buffer", init, size)
+        buftype = c_wchar * size
+        buf = buftype()
+        buf.value = init
+        return buf
+    elif isinstance(init, int):
+        _sys.audit("ctypes.create_unicode_buffer", None, init)
+        buftype = c_wchar * init
+        buf = buftype()
+        return buf
+    raise TypeError(init)
+
 def enum_device_interfaces(handle_info, guid):
     dev_interface_data = SP_DEVICE_INTERFACE_DATA()
     dev_interface_data.cb_size = ctypes.sizeof(dev_interface_data)
@@ -186,14 +206,12 @@ def find_all_devices():
             device_path = get_device_path(handle_info, interface_data, ctypes.byref(info_data))
             print("path", device_path)
             
-            parent_device = c_ulong() # NOTE: Study c_ulong
+            parent_device = c_ulong()
 
-            #get parent instance id (so we can discriminate on port)
             if setup_dll.CM_Get_Parent(ctypes.byref(parent_device),
                     info_data.dev_inst, 0) != 0: #CR_SUCCESS = 0
                 parent_device.value = 0 #null
 
-            #get unique instance id string
             required_size.value = 0
             SetupDiGetDeviceInstanceId(handle_info, ctypes.byref(info_data),
                     None, 0,
@@ -210,7 +228,6 @@ def find_all_devices():
             else:
                 hid_device = HidDevice(device_path, parent_device.value )
 
-            # add device to results, if not protected
             if hid_device.vendor_id:
                 results.append(hid_device)
     return results
