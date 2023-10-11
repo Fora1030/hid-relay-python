@@ -204,36 +204,7 @@ def find_all_devices():
     with DeviceInformationSetInterface(guid) as handle_info:
         for interface_data in enum_device_interfaces(handle_info, guid):
             device_path = get_device_path(handle_info, interface_data, ctypes.byref(info_data))
-            print("path", device_path)
-            
-            parent_device = c_ulong()
-
-            if setup_dll.CM_Get_Parent(ctypes.byref(parent_device),
-                    info_data.dev_inst, 0) != 0: #CR_SUCCESS = 0
-                parent_device.value = 0 #null
-
-            required_size.value = 0
-            SetupDiGetDeviceInstanceId(handle_info, ctypes.byref(info_data),
-                    None, 0,
-                    ctypes.byref(required_size) )
-
-            device_instance_id = create_unicode_buffer(required_size.value)
-            if required_size.value > 0:
-                SetupDiGetDeviceInstanceId(handle_info, ctypes.byref(info_data),
-                        device_instance_id, required_size,
-                        ctypes.byref(required_size) )
-
-                hid_device = HidDevice(device_path,
-                        parent_device.value, device_instance_id.value )
-            else:
-                hid_device = HidDevice(device_path, parent_device.value )
-
-            if hid_device.vendor_id:
-                results.append(hid_device)
+            # print("path", device_path)
+            results.append(device_path)
     return results
 
-    # handle = SetupDiGetClassDevsW(ctypes.byref(guid), None, None, (DIGCF.PRESENT | DIGCF.DEVICEINTERFACE))
-    # print(handle)
-    # print(SetupDiDestroyDeviceInfoList(handle))
-
-find_all_devices()
