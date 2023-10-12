@@ -4,7 +4,7 @@ from ctypes import Structure, Union, c_ubyte, c_long, c_ulong, c_ushort, \
         c_wchar, c_void_p, c_uint 
 from ctypes.wintypes import ULONG, BOOLEAN, BYTE, WORD, DWORD, HANDLE, BOOL, \
         WCHAR, LPWSTR, LPCWSTR
-from hid_dll_api import GUID, get_hid_guid
+from .hid_dll_api import GUID, get_hid_guid
 import platform
 
 setup_dll = ctypes.windll.setupapi

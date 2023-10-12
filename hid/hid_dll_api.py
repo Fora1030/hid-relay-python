@@ -5,7 +5,7 @@ import threading
 from ctypes import Structure, Union, c_ubyte, c_long, c_ulong, c_ushort, \
         c_wchar, c_void_p, c_uint 
 from ctypes.wintypes import ULONG, BOOLEAN, BYTE, WORD, DWORD, HANDLE
-from kernel32_dll_api import CreateFile, close_handle 
+from .kernel32_dll_api import CreateFile, close_handle 
 
 hid_dll = ctypes.windll.hid
 INVALID_HANDLE_VALUE = ctypes.c_void_p(-1).value

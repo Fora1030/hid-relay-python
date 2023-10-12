@@ -1,5 +1,5 @@
-from setup_dll_api import find_all_devices
-from hid_dll_api import HidDeviceCreateFile
+from .setup_dll_api import find_all_devices
+from .hid_dll_api import HidDeviceCreateFile
 
 class FindRelay(object): 
     """ 
