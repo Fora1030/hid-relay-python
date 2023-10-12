@@ -9,4 +9,3 @@ from ctypes.wintypes import (
 hid_api_dll = ctypes.windll.hid
 HidD_GetAttributes = hid_api_dll.HidD_GetAttributes
 
-print(HidD_GetAttributes)
