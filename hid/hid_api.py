@@ -1,4 +1,5 @@
 from setup_dll_api import find_all_devices
+from hid_dll_api import HidDeviceCreateFile
 
 class FilterHidDevices(object):
     """ 
@@ -25,15 +26,15 @@ class FilterHidDevices(object):
         self.vendor_id = vendor_id
         self.product_id = product_id
     
-    def find_device(self):
+    def find_device_path(self):
         all_devices = find_all_devices()
+        print(all_devices)
         for device_path in  all_devices:
             if (str(hex(self.vendor_id))[2:] in device_path and str(hex(self.product_id))[2:] in device_path):
                 return device_path
         raise Exception("The device was not found!")
 
-
-USB_CFG_VENDOR_ID = 0x16c0  
-USB_CFG_DEVICE_ID = 0x05DF  
-test = FilterHidDevices(vendor_id=USB_CFG_VENDOR_ID, product_id=USB_CFG_DEVICE_ID)
-print(test.find_device())
+    def get_device(self):
+        device_path = self.find_device_path()
+        hid_device = HidDeviceCreateFile(device_path= device_path, instance_id="")
+        print(hid_device.open())

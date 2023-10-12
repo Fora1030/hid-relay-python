@@ -9,8 +9,8 @@ write_file = kernel_dll.WriteFile
 close_handle = kernel_dll.CloseHandle
 close_handle.restype = BOOL
 close_handle.argtypes = [HANDLE]
-set_event = kernel_dll.setEvent
-wait_for_single_object = kernel_dll.WaitForSingleObject
+# set_event = kernel_dll.setEvent
+# wait_for_single_object = kernel_dll.WaitForSingleObject
 
 
 c_tchar                         = ctypes.c_wchar
