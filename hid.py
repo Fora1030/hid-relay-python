@@ -1,4 +1,4 @@
-from hid import FindRelay
+from hid_relay import FindRelay
 import time
 
 USB_CFG_VENDOR_ID = 0x16c0  
