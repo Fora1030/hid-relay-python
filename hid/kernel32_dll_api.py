@@ -3,14 +3,15 @@ from ctypes.wintypes import BOOL, HANDLE
 
 kernel_dll = ctypes.windll.kernel32
 
-read_file = kernel_dll.ReadFile
-cancel_io = kernel_dll.CancelIo
-write_file = kernel_dll.WriteFile
+ReadFile = kernel_dll.ReadFile
+CancelIo = kernel_dll.CancelIo
+WriteFile = kernel_dll.WriteFile
 close_handle = kernel_dll.CloseHandle
 close_handle.restype = BOOL
 close_handle.argtypes = [HANDLE]
-# set_event = kernel_dll.setEvent
-# wait_for_single_object = kernel_dll.WaitForSingleObject
+SetEvent            = kernel_dll.SetEvent
+WaitForSingleObject = kernel_dll.WaitForSingleObject
+
 
 
 c_tchar                         = ctypes.c_wchar

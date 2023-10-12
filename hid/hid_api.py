@@ -1,7 +1,7 @@
 from setup_dll_api import find_all_devices
 from hid_dll_api import HidDeviceCreateFile
 
-class FilterHidDevices(object):
+class FilterHidDevices(object): # NOTE: n
     """ 
     Filtering HID devices
     ---
@@ -14,7 +14,7 @@ class FilterHidDevices(object):
     Args:
         object (_type_): _description_
     """
-    def __init__(self, vendor_id, product_id) -> None:
+    def __init__(self, vendor_id, product_id) -> None:  # NOTE: n 
         """
         Constructor to search and filter all hid devices.
         ---
@@ -26,7 +26,7 @@ class FilterHidDevices(object):
         self.vendor_id = vendor_id
         self.product_id = product_id
     
-    def find_device_path(self):
+    def find_device_path(self): # NOTE: n
         all_devices = find_all_devices()
         print(all_devices)
         for device_path in  all_devices:
@@ -34,7 +34,8 @@ class FilterHidDevices(object):
                 return device_path
         raise Exception("The device was not found!")
 
-    def get_device(self):
+    def get_device(self): # NOTE: n
         device_path = self.find_device_path()
         hid_device = HidDeviceCreateFile(device_path= device_path, instance_id="")
-        print(hid_device.open())
+        return hid_device
+        # print(hid_device.open())

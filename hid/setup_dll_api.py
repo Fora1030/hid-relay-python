@@ -51,7 +51,7 @@ class SP_DEVICE_INTERFACE_DATA(Structure):
             ("reserved",             ctypes.POINTER(ULONG))
     ]
 
-class SP_DEVICE_INTERFACE_DETAIL_DATA(Structure):
+class SP_DEVICE_INTERFACE_DETAIL_DATA(Structure):  # NOTE: n
     """ Structure to receive information about the the specified interface"""
     _pack_ = WIN_PACK
     _fields_ = [
@@ -108,7 +108,7 @@ SetupDiGetDeviceInstanceId.argtypes = [
     ]
 
 
-class DeviceInformationSetInterface(object):
+class DeviceInformationSetInterface(object):  # NOTE: n
     """
         Interface for SetupDiGetClassDevsW function (setupapi.h) which returns a handle 
         to a device information set that contains requested device information elements for
@@ -117,14 +117,14 @@ class DeviceInformationSetInterface(object):
     Args:
         object (_type_): _description_
     """
-    def __init__(self, guid_target) -> None:
+    def __init__(self, guid_target) -> None: # NOTE: n
         self.guid = guid_target
         self.handle_info = None
 
-    def __enter__(self):
+    def __enter__(self): # NOTE: n
         return self.open()
     
-    def open(self):
+    def open(self): # NOTE: n
         """
             Gets handle to an opaque device information set that describes the device interfaces
 
@@ -134,10 +134,10 @@ class DeviceInformationSetInterface(object):
         )
         return self.handle_info
     
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback): # NOTE: n
         self.close()
 
-    def close(self):
+    def close(self): # NOTE: n
         """Destroy allocated storage"""
         if self.handle_info and self.handle_info != (HANDLE(-1)):
             SetupDiDestroyDeviceInfoList(self.handle_info)
@@ -162,7 +162,7 @@ def create_unicode_buffer(init, size=None):
         return buf
     raise TypeError(init)
 
-def enum_device_interfaces(handle_info, guid):
+def enum_device_interfaces(handle_info, guid): # NOTE: n
     dev_interface_data = SP_DEVICE_INTERFACE_DATA()
     dev_interface_data.cb_size = ctypes.sizeof(dev_interface_data)
 
@@ -175,7 +175,7 @@ def enum_device_interfaces(handle_info, guid):
         device_index += 1
     del dev_interface_data
 
-def get_device_path(handle_info, interface_data, ptr_info_data= None):
+def get_device_path(handle_info, interface_data, ptr_info_data= None):  # NOTE: n
     required_size = c_ulong(0)
     dev_interface_detail_data = SP_DEVICE_INTERFACE_DETAIL_DATA()
     dev_interface_detail_data.cb_size = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
@@ -194,7 +194,7 @@ def get_device_path(handle_info, interface_data, ptr_info_data= None):
         )
     return dev_interface_detail_data.__str__()
 
-def find_all_devices():
+def find_all_devices():  # NOTE: n
     guid = get_hid_guid()
     results = []
     required_size = DWORD()
